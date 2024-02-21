@@ -18,10 +18,10 @@ class SandParticle:
         self.vel_y = vel_y
         self.set_color()
 
-    # get the next pixel color
+    # set the next pixel color
     def set_color(self) -> None:
         hue = self.__class__.baseColor / 360
-        saturation = 0.2
+        saturation = 0.3
         value = 0.9
         r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
         self.color = pygame.Color(int(r * 255), int(g * 255), int(b * 255))
