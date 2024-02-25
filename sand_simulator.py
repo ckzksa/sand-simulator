@@ -11,6 +11,7 @@ SPAWN_RADIUS = 10
 SPAWN_AMOUNT = 20
 BACKGROUND_COLOR = (0, 0, 0)
 
+
 class SandParticle:
     baseColor = 220
 
@@ -36,6 +37,7 @@ class Grid:
         self.gravity = gravity
         self.spawnRadius = spawnRadius
         self.spawnAmount = spawnAmount
+        self.buffer_surface = pygame.Surface((self.width * self.sandSize, self.height * self.sandSize))
     
     def createEmptyGrid(self):
         return [[None for _ in range(self.width)] for _ in range(self.height)]
@@ -72,7 +74,7 @@ class Grid:
             for x, sandParticle in enumerate(self.grid[y]):
                 if sandParticle is None:
                     continue
-                if self.grid[y + 1][x] is None: # the sand particle can at least fall one pixel
+                if nextGrid[y + 1][x] is None: # the sand particle can at least fall one pixel
                     next_pos = int(y + sandParticle.vel_y)
                     
                     if next_pos >= self.height:
@@ -80,13 +82,13 @@ class Grid:
                     
                     # let's find if a sand particle in on the path
                     for yy in range(next_pos, y, -1):
-                        if self.grid[yy][x] is not None:
+                        if nextGrid[yy][x] is not None:
                             next_pos = yy - 1
                     
                     nextGrid[next_pos][x] = copy.deepcopy(sandParticle)
                     
                     if next_pos != int(y + sandParticle.vel_y):
-                        nextGrid[next_pos][x].vel_y = self.grid[next_pos + 1][x].vel_y if next_pos + 1 < self.height else 0
+                        nextGrid[next_pos][x].vel_y = nextGrid[next_pos + 1][x].vel_y if next_pos + 1 < self.height else 0
                     else:
                         nextGrid[next_pos][x].vel_y += self.gravity
                 else: # the sand particle is blocked
@@ -95,7 +97,7 @@ class Grid:
                             return True
                         return False
                     
-                    directions = [delta for delta in [-1,1] if isWithin(x + delta) and self.grid[y + 1][x + delta] is None]
+                    directions = [delta for delta in [-1,1] if isWithin(x + delta) and nextGrid[y + 1][x + delta] is None]
                     selected_direction = random.choice(directions) if directions else None
                     
                     # can the sand particle fall on the sides?
@@ -106,12 +108,12 @@ class Grid:
         self.grid = nextGrid
 
     def draw(self, screen):
-        buffer_surface = pygame.Surface((self.width * self.sandSize, self.height * self.sandSize))
+        pygame.draw.rect(self.buffer_surface, BACKGROUND_COLOR, (0, 0, self.width * self.sandSize, self.height * self.sandSize))
         for y, line in enumerate(self.grid):
             for x, sand in enumerate(line):
                 if sand is not None:
-                    pygame.draw.rect(buffer_surface, sand.color, (x * self.sandSize, y * self.sandSize, self.sandSize, self.sandSize))
-        screen.blit(buffer_surface, (0, 0))
+                    pygame.draw.rect(self.buffer_surface, sand.color, (x * self.sandSize, y * self.sandSize, self.sandSize, self.sandSize))
+        screen.blit(self.buffer_surface, (0, 0))
 
 if __name__ == "__main__":
     pygame.init()
